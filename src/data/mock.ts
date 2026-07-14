@@ -28,10 +28,58 @@ export type Conclave = {
 
 export const currentUserId = 'you'
 
+/** Curator attached to this Conclave (also author of Curator Drops) */
+export const curator: Member = {
+  id: 'curator',
+  name: 'Isabelle',
+  initials: 'IL',
+  color: '#9a8158',
+}
+
+export type CuratorMessage = {
+  id: string
+  from: 'curator' | 'you'
+  text: string
+  time: string
+}
+
+export const curatorThread: CuratorMessage[] = [
+  {
+    id: 'cm-1',
+    from: 'curator',
+    text: 'If you’re going for the Jura list, Wednesdays after nine are quieter.',
+    time: 'Mon',
+  },
+  {
+    id: 'cm-2',
+    from: 'you',
+    text: 'Noted — any chance of a bar seat for Thursday?',
+    time: 'Mon',
+  },
+  {
+    id: 'cm-3',
+    from: 'curator',
+    text: 'I’ll put a soft hold. Message me once you’re sure.',
+    time: 'Tue',
+  },
+]
+
+export const exclusiveAccess = {
+  reservation: {
+    venue: 'Bar Brut',
+    detail: 'priority window opens 48h before public booking',
+  },
+  offer: {
+    id: 'offer-private-room',
+    title: 'Private room, Thursdays only',
+    detail: 'Curator-arranged, this month only',
+  },
+}
+
 export const conclave: Conclave = {
   id: 'natural-wine',
-  name: 'Natural Wine & Late Dinners',
-  tasteLine: 'natural wine and late dinners',
+  name: 'Wine Connoisseur',
+  tasteLine: 'Wine Connoisseur',
   members: [
     { id: 'you', name: 'You', initials: 'YO', color: '#5c6550' },
     { id: 'mara', name: 'Mara', initials: 'MK', color: '#7a5c4a' },

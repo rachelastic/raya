@@ -283,7 +283,7 @@ export function ProposeMeetupScreen({
               color: 'var(--surface-raised)',
             }}
           >
-            Send to Conclave
+            Send to Circle
           </button>
         </div>
       </form>

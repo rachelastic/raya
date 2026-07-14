@@ -27,7 +27,7 @@ export default function App() {
     : [placement.viewer]
 
   const clusterName =
-    placement.clusterName ?? 'Natural Wine & Late-Night Dining'
+    placement.clusterName ?? 'Wine Connoisseur'
 
   const goingIds = useMemo(() => {
     const others = matchedMembers

@@ -10,20 +10,52 @@ const MIN_CONCLAVE = 6
 const MAX_CONCLAVE = 10
 const SAME_CITY_BOOST = 0.12
 
+export type NicheStats = {
+  /** Full generated member pool */
+  totalMembers: number
+  /** Members in the viewer’s coarse taste cluster */
+  clusterSize: number
+  /** Matched Conclave size (0 if unplaced) */
+  conclaveSize: number
+  /** Circle members who meet Curator-table standing gates */
+  curatorTableSize: number
+}
+
 export type PlacementResult =
   | {
       placed: true
       clusterName: string
       clusterKey: string
       conclave: TasteMember[]
+      /** Subset of conclave eligible for the Curator’s table (may be empty) */
+      curatorTable: TasteMember[]
       viewer: TasteMember
-    }
+    } & NicheStats
   | {
       placed: false
       clusterName: string | null
       viewer: TasteMember
+      curatorTable: TasteMember[]
       reason: 'insufficient_taste'
-    }
+    } & NicheStats
+
+
+/**
+ * Curator’s table eligibility — human-gated standing, not taste matching.
+ * All gates required; curatorVerifiedStanding is independent of vouchs.
+ */
+export function qualifiesForCuratorTable(member: TasteMember): boolean {
+  return (
+    member.vouchCount >= 2 &&
+    member.vouchedByHighStanding &&
+    member.tier === 'elevated' &&
+    member.curatorVerifiedStanding
+  )
+}
+
+export function filterCuratorTable(members: TasteMember[]): TasteMember[] {
+  return members.filter(qualifiesForCuratorTable)
+}
 
 function vector(member: TasteMember): number[] {
   return TASTE_TAGS.map((tag) => member.tastes[tag] ?? 0)
@@ -65,8 +97,15 @@ function titleTag(tag: TasteTag): string {
   return tag.replace(/\b[a-z]/g, (c) => c.toUpperCase())
 }
 
+/** Display names for known taste clusters (UX copy overrides) */
+const CLUSTER_DISPLAY_NAMES: Record<string, string> = {
+  'late-night dining::natural wine': 'Wine Connoisseur',
+}
+
 export function clusterNameFromTags(tags: TasteTag[]): string {
   if (tags.length === 0) return 'Open Tastes'
+  const key = clusterKeyFromTags(tags)
+  if (CLUSTER_DISPLAY_NAMES[key]) return CLUSTER_DISPLAY_NAMES[key]
   if (tags.length === 1) return titleTag(tags[0])
   return `${titleTag(tags[0])} & ${titleTag(tags[1])}`
 }
@@ -146,13 +185,20 @@ export function placeInConclave(
   const viewerTags = topTags(viewer, 2)
   const key = viewerTags.length ? clusterKeyFromTags(viewerTags) : null
   const clusterName = key ? (names.get(key) ?? clusterNameFromTags(viewerTags)) : null
+  const coarseClusterSize = key ? (byKey.get(key)?.length ?? 1) : 0
+  const totalMembers = members.length
 
   if (meaningfulTags(viewer).length < 2) {
     return {
       placed: false,
       clusterName,
       viewer,
+      curatorTable: [],
       reason: 'insufficient_taste',
+      totalMembers,
+      clusterSize: coarseClusterSize,
+      conclaveSize: 0,
+      curatorTableSize: 0,
     }
   }
 
@@ -165,12 +211,19 @@ export function placeInConclave(
   }
 
   const conclave = matchConclave(viewer, pool)
+  const curatorTable = filterCuratorTable(conclave)
 
   return {
     placed: true,
     clusterName: clusterName ?? clusterNameFromTags(viewerTags),
     clusterKey: key ?? 'open',
     conclave,
+    curatorTable,
     viewer,
+    totalMembers,
+    // Effective taste neighborhood (coarse clique, or widened primary-tag pool)
+    clusterSize: pool.length,
+    conclaveSize: conclave.length,
+    curatorTableSize: curatorTable.length,
   }
 }

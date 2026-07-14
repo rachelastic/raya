@@ -157,7 +157,7 @@ export function MeetupConfirmedScreen({
               color: 'var(--surface-raised)',
             }}
           >
-            Back to Conclave
+            Back to Circle
           </button>
         </div>
       </div>

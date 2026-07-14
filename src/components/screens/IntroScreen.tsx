@@ -54,7 +54,7 @@ export function IntroScreen({ onEnter }: IntroScreenProps) {
               color: 'var(--surface-raised)',
             }}
           >
-            You’ve been placed in a Conclave
+            You’ve been placed in a Circle
           </h1>
 
           <p
@@ -76,7 +76,7 @@ export function IntroScreen({ onEnter }: IntroScreenProps) {
               className="text-[11px] tracking-[0.18em] uppercase"
               style={{ color: 'rgba(250,249,246,0.4)' }}
             >
-              Your Conclave
+              Your Circle
             </p>
             <p
               className="mt-2 text-[1.65rem] font-medium italic leading-snug"

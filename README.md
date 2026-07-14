@@ -1,6 +1,6 @@
-# Places — Conclaves
+# Places — Circles
 
-Clickable mobile prototype of **Conclaves**, a feature for Places (by Raya): small circles of members who share curated taste in restaurants, hotels, and travel.
+Clickable mobile prototype of **Circles**, a feature for Places (by Raya): small circles of members who share curated taste in restaurants, hotels, and travel.
 
 ## Run
 
@@ -21,7 +21,7 @@ Open the local URL Vite prints (usually `http://localhost:5173`). The UI renders
 ## Flow
 
 1. **Intro** — Concentric-circle placement reveal → Enter  
-2. **Conclave Home** — Curator Drop + shared feed; Save toggles; Propose a meetup  
+2. **Circle Home** — Curator Drop + shared feed; Save toggles; Propose a meetup  
 3. **Propose Meetup** — Form → RSVP list; tap RSVP to confirm (quorum = 4)  
 4. **Meetup Confirmed** — Place, date, who’s going, map placeholder  
 

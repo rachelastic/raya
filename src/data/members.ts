@@ -21,6 +21,8 @@ export const CITIES = [
 
 export type City = (typeof CITIES)[number]
 
+export type MemberTier = 'standard' | 'elevated'
+
 export type TasteMember = {
   id: string
   name: string
@@ -30,6 +32,17 @@ export type TasteMember = {
   city: City
   /** Weights 0–1 for each taste tag (missing keys = 0) */
   tastes: Partial<Record<TasteTag, number>>
+  /** Other high-standing members who have vouched (0–5) */
+  vouchCount: number
+  /** At least one voucher is themselves above a standing threshold */
+  vouchedByHighStanding: boolean
+  /** Mock paid / subscription tier gate */
+  tier: MemberTier
+  /**
+   * Curator has manually flagged real niche competency/standing
+   * (sommelier, collector, critic). Independent of vouchCount — not derived.
+   */
+  curatorVerifiedStanding: boolean
 }
 
 /** Minimal shape for avatars / rows */
@@ -78,6 +91,35 @@ function pickTags(rand: () => number, count: number): TasteTag[] {
     picked.push(pool.splice(idx, 1)[0])
   }
   return picked
+}
+
+/**
+ * Deterministic standing / exclusivity signals for curator-table eligibility.
+ * ~15% of the pool fully qualifies (all gates); fields stay independent otherwise.
+ */
+function mockStanding(rand: () => number): Pick<
+  TasteMember,
+  | 'vouchCount'
+  | 'vouchedByHighStanding'
+  | 'tier'
+  | 'curatorVerifiedStanding'
+> {
+  if (rand() < 0.15) {
+    return {
+      vouchCount: 2 + Math.floor(rand() * 4),
+      vouchedByHighStanding: true,
+      tier: 'elevated',
+      curatorVerifiedStanding: true,
+    }
+  }
+
+  return {
+    vouchCount: Math.floor(rand() * 5),
+    vouchedByHighStanding: rand() > 0.55,
+    tier: rand() > 0.85 ? 'elevated' : 'standard',
+    // Rare on its own — must not be derived from vouchCount
+    curatorVerifiedStanding: rand() > 0.9,
+  }
 }
 
 /**
@@ -145,6 +187,7 @@ function buildMembers(): TasteMember[] {
       color: AVATAR_COLORS[i % AVATAR_COLORS.length],
       city: CITIES[Math.floor(rand() * CITIES.length)],
       tastes,
+      ...mockStanding(rand),
     })
   }
 
@@ -162,6 +205,11 @@ function buildMembers(): TasteMember[] {
     'coffee culture': 0.36,
     wellness: 0.22,
   }
+  // Viewer is not at the Curator's table — gates stay closed for them
+  viewer.vouchCount = 1
+  viewer.vouchedByHighStanding = false
+  viewer.tier = 'standard'
+  viewer.curatorVerifiedStanding = false
 
   const sparse = pool[48]
   sparse.id = 'viewer-sparse'
@@ -171,6 +219,10 @@ function buildMembers(): TasteMember[] {
   sparse.tastes = {
     wellness: 0.41,
   }
+  sparse.vouchCount = 0
+  sparse.vouchedByHighStanding = false
+  sparse.tier = 'standard'
+  sparse.curatorVerifiedStanding = false
 
   return ensureUniqueInitials(pool, {
     viewer: 'YO',

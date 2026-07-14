@@ -34,7 +34,7 @@ export function PhoneFrame({ children }: PhoneFrameProps) {
           className="mt-5 text-center text-[11px] tracking-[0.22em] uppercase"
           style={{ color: 'rgba(243,241,236,0.35)', fontFamily: 'var(--font-body)' }}
         >
-          Places · Conclaves
+          Places · Circles
         </p>
       </div>
     </div>
