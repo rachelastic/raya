@@ -28,6 +28,17 @@ export default function App() {
 
   const clusterName = placement.clusterName ?? 'Wine Connoisseur'
 
+  // Places users outside this Circle — curator can open their profile on invite
+  const inviteCandidates = useMemo(() => {
+    const inCircle = new Set(matchedMembers.map((m) => m.id))
+    return MOCK_MEMBERS.filter(
+      (m) =>
+        !inCircle.has(m.id) &&
+        m.id !== CURRENT_USER_ID &&
+        !m.id.startsWith('viewer'),
+    )
+  }, [matchedMembers])
+
   function go(next: Screen) {
     setScreen(next)
     setScreenKey((k) => k + 1)
@@ -72,6 +83,7 @@ export default function App() {
             onDraftChange={setInvite}
             onBack={() => go('home')}
             onSubmitted={() => go('invitePending')}
+            candidates={inviteCandidates}
           />
         )}
 

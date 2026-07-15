@@ -47,7 +47,7 @@ export const curatorThread: CuratorMessage[] = [
   {
     id: 'cm-1',
     from: 'curator',
-    text: 'If you’re going for the Jura list, Wednesdays after nine are quieter.',
+    text: 'If you’re going for the Jura list, Wednesdays after nine are quieter',
     time: 'Mon',
   },
   {
@@ -59,7 +59,7 @@ export const curatorThread: CuratorMessage[] = [
   {
     id: 'cm-3',
     from: 'curator',
-    text: 'I’ll put a soft hold. Message me once you’re sure.',
+    text: 'I’ll put a soft hold — message me once you’re sure',
     time: 'Tue',
   },
 ]
@@ -96,7 +96,7 @@ export const conclave: Conclave = {
     neighborhood: 'Greenpoint',
     image:
       'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=800&q=80',
-    note: 'Ask for the cellar list — the Jura whites rarely make the chalkboard.',
+    note: 'Ask for the cellar list — the Jura whites rarely make the chalkboard',
     isCuratorDrop: true,
     curatorLabel: 'This week’s Curator Drop',
   },
@@ -107,7 +107,7 @@ export const conclave: Conclave = {
       neighborhood: 'Williamsburg',
       image:
         'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80',
-      note: 'Saving this for a quiet weeknight — sole meunière at the bar, no reservation after 9.',
+      note: 'Saving this for a quiet weeknight — sole meunière at the bar, no reservation after 9',
       savedBy: 'Mara',
       savedById: 'mara',
     },
@@ -117,7 +117,7 @@ export const conclave: Conclave = {
       neighborhood: 'South Williamsburg',
       image:
         'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&q=80',
-      note: 'Came for wine, stayed for the cheese. Putting a pin in it for Friday.',
+      note: 'Came for wine, stayed for the cheese — putting a pin in it for Friday',
       savedBy: 'Julian',
       savedById: 'julian',
     },
@@ -127,7 +127,7 @@ export const conclave: Conclave = {
       neighborhood: 'East Village',
       image:
         'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=800&q=80',
-      note: 'Need a place for a real conversation — orange wine flights, never crowded early.',
+      note: 'Need a place for a real conversation — orange wine flights, never crowded early',
       savedBy: 'Elise',
       savedById: 'elise',
     },
@@ -137,7 +137,7 @@ export const conclave: Conclave = {
       neighborhood: 'Lower East Side',
       image:
         'https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=800&q=80',
-      note: 'Corner by the kitchen. Note to self: order whatever they’re opening.',
+      note: 'Corner by the kitchen — note to self: order whatever they’re opening',
       savedBy: 'Sana',
       savedById: 'sana',
     },
@@ -147,24 +147,30 @@ export const conclave: Conclave = {
       neighborhood: 'Tribeca',
       image:
         'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
-      note: 'Weeknight prix fixe if we can get in — walk Greenwich after.',
+      note: 'Weeknight prix fixe if we can get in — walk Greenwich after',
       savedBy: 'Tom',
       savedById: 'tom',
     },
   ],
 }
 
-/** Invite a prospective member — always requires Curator approval */
+/** Invite a Places user into the Circle — Curator reviews their profile */
 export type InviteDraft = {
+  memberId: string
   name: string
+  initials: string
+  color: string
+  city: string
   howYouKnow: string
-  note: string
 }
 
 export const defaultInvite: InviteDraft = {
+  memberId: '',
   name: '',
+  initials: '',
+  color: '#5c6550',
+  city: '',
   howYouKnow: '',
-  note: '',
 }
 
 /** Rebind feed “saved by” to the shared matched conclave (skip viewer). */

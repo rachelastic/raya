@@ -47,8 +47,8 @@ export function InvitePendingScreen({
           style={{ color: 'var(--ink-muted)' }}
         >
           {status === 'pending'
-            ? 'New members enter only after Curator approval — not by Circle vote alone.'
-            : 'Isabelle approved this invite. They’ll receive a quiet invitation to the Circle.'}
+            ? `${curator.name} will review their Places profile before deciding`
+            : `${curator.name} approved after reviewing their Places profile`}
         </p>
 
         <div
@@ -76,14 +76,14 @@ export function InvitePendingScreen({
                   }}
                 >
                   {status === 'pending'
-                    ? 'Reviewing your invite'
+                    ? 'Reviewing Places profile'
                     : 'Approved'}
                 </p>
               </div>
             </div>
 
             <div
-              className="mt-5 space-y-3 pt-5"
+              className="mt-5 space-y-4 pt-5"
               style={{ borderTop: '1px solid var(--line)' }}
             >
               <div>
@@ -91,15 +91,41 @@ export function InvitePendingScreen({
                   className="text-[10px] font-medium tracking-[0.14em] uppercase"
                   style={{ color: 'var(--ink-muted)' }}
                 >
-                  Invitee
+                  Places profile
                 </p>
+                <div className="mt-2.5 flex items-center gap-3">
+                  <Avatar
+                    member={{
+                      id: invite.memberId || 'invitee',
+                      name: invite.name || 'Guest',
+                      initials: invite.initials || '?',
+                      color: invite.color || '#5c6550',
+                    }}
+                    size="md"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className="truncate text-[1.25rem] font-medium leading-tight"
+                      style={{ fontFamily: 'var(--font-display)' }}
+                    >
+                      {invite.name || 'Guest'}
+                    </p>
+                    <p
+                      className="mt-0.5 text-[12px]"
+                      style={{ color: 'var(--ink-muted)' }}
+                    >
+                      {invite.city ? `${invite.city} · ` : ''}On Places
+                    </p>
+                  </div>
+                </div>
                 <p
-                  className="mt-1 text-[1.35rem] font-medium leading-tight"
-                  style={{ fontFamily: 'var(--font-display)' }}
+                  className="mt-3 text-[12px] font-light"
+                  style={{ color: 'var(--brass)' }}
                 >
-                  {invite.name || 'Guest'}
+                  Available for Curator review
                 </p>
               </div>
+
               {invite.howYouKnow && (
                 <div>
                   <p
@@ -113,25 +139,6 @@ export function InvitePendingScreen({
                     style={{ color: 'var(--ink-soft)' }}
                   >
                     {invite.howYouKnow}
-                  </p>
-                </div>
-              )}
-              {invite.note && (
-                <div>
-                  <p
-                    className="text-[10px] font-medium tracking-[0.14em] uppercase"
-                    style={{ color: 'var(--ink-muted)' }}
-                  >
-                    Your note to Isabelle
-                  </p>
-                  <p
-                    className="mt-1 text-[14px] font-light italic leading-relaxed"
-                    style={{
-                      color: 'var(--ink-soft)',
-                      fontFamily: 'var(--font-display)',
-                    }}
-                  >
-                    “{invite.note}”
                   </p>
                 </div>
               )}

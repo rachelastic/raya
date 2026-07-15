@@ -65,7 +65,6 @@ export function IntroScreen({ onEnter }: IntroScreenProps) {
             <span style={{ color: 'var(--brass-soft)' }}>
               {conclave.tasteLine}
             </span>
-            .
           </p>
 
           <div
