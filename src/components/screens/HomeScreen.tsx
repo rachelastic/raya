@@ -259,13 +259,11 @@ function FeedCard({
 }
 
 function SharedCarousel({
-  title,
   places,
   byId,
   savedIds,
   onToggleSave,
 }: {
-  title: string
   places: PlaceItem[]
   byId: Map<string, TasteMember>
   savedIds: Set<string>
@@ -274,35 +272,19 @@ function SharedCarousel({
   if (places.length === 0) return null
 
   return (
-    <div>
-      <div className="mb-3 flex items-baseline justify-between px-5">
-        <h3
-          className="text-[13px] font-medium"
-          style={{
-            fontFamily: 'var(--font-display)',
-            color: 'var(--ink-soft)',
-          }}
-        >
-          {title}
-        </h3>
-        <span className="text-[11px]" style={{ color: 'var(--ink-muted)' }}>
-          {places.length}
-        </span>
-      </div>
-      <div
-        className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-5 px-5 pb-1"
-        style={{ WebkitOverflowScrolling: 'touch' }}
-      >
-        {places.map((place) => (
-          <FeedCard
-            key={place.id}
-            place={place}
-            member={place.savedById ? byId.get(place.savedById) : undefined}
-            saved={savedIds.has(place.id)}
-            onToggleSave={() => onToggleSave(place.id)}
-          />
-        ))}
-      </div>
+    <div
+      className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-5 px-5 pb-1"
+      style={{ WebkitOverflowScrolling: 'touch' }}
+    >
+      {places.map((place) => (
+        <FeedCard
+          key={place.id}
+          place={place}
+          member={place.savedById ? byId.get(place.savedById) : undefined}
+          saved={savedIds.has(place.id)}
+          onToggleSave={() => onToggleSave(place.id)}
+        />
+      ))}
     </div>
   )
 }
@@ -607,19 +589,11 @@ export function HomeScreen({
             className="mb-4 text-[11px] font-medium tracking-[0.18em] uppercase"
             style={{ color: 'var(--ink-muted)' }}
           >
-            Shared recently
+            Recently
           </h2>
-          <div className="-mx-5 flex flex-col gap-6">
+          <div className="-mx-5">
             <SharedCarousel
-              title="Saved by the circle"
-              places={feed.slice(0, 3)}
-              byId={byId}
-              savedIds={savedIds}
-              onToggleSave={onToggleSave}
-            />
-            <SharedCarousel
-              title="Worth a detour"
-              places={feed.slice(3)}
+              places={feed}
               byId={byId}
               savedIds={savedIds}
               onToggleSave={onToggleSave}
