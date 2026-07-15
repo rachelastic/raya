@@ -154,19 +154,18 @@ export const conclave: Conclave = {
   ],
 }
 
-export type MeetupDraft = {
-  place: string
-  date: string
+/** Invite a prospective member — always requires Curator approval */
+export type InviteDraft = {
+  name: string
+  howYouKnow: string
   note: string
 }
 
-export const defaultMeetup: MeetupDraft = {
-  place: 'Bar Brut',
-  date: 'Thursday, July 17 · 8:30 PM',
-  note: 'Let’s start at the bar and see where the night goes.',
+export const defaultInvite: InviteDraft = {
+  name: '',
+  howYouKnow: '',
+  note: '',
 }
-
-export const quorum = 4
 
 /** Rebind feed “saved by” to the shared matched conclave (skip viewer). */
 export function feedForConclave(

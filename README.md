@@ -21,8 +21,8 @@ Open the local URL Vite prints (usually `http://localhost:5173`). The UI renders
 ## Flow
 
 1. **Intro** — Concentric-circle placement reveal → Enter  
-2. **Circle Home** — Curator Drop + shared feed; Save toggles; Propose a meetup  
-3. **Propose Meetup** — Form → RSVP list; tap RSVP to confirm (quorum = 4)  
-4. **Meetup Confirmed** — Place, date, who’s going, map placeholder  
+2. **Circle Home** — Curator Drop + Noted carousel; Save toggles; Invite new members  
+3. **Invite members** — Suggest someone → send to Curator for approval  
+4. **Invite pending** — Awaiting Isabelle’s approval (required gate)  
 
 Reveal clustering lives in `src/data/members.ts` and `src/data/conclaveMatching.ts`.

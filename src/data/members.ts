@@ -231,7 +231,7 @@ export function buildMembers(seed = 42): TasteMember[] {
   })
 }
 
-/** Generated once; shared by App → reveal + home (and meetup screens). */
+/** Generated once; shared by App → reveal + home (and invite screens). */
 export const MOCK_MEMBERS = buildMembers()
 
 export const CURRENT_USER_ID = 'viewer'

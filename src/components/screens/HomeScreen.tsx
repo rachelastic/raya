@@ -14,7 +14,7 @@ import type { TasteMember } from '../../data/members'
 type HomeScreenProps = {
   savedIds: Set<string>
   onToggleSave: (id: string) => void
-  onPropose: (placeName: string) => void
+  onInvite: () => void
   members: TasteMember[]
   clusterName: string
   viewerId: string
@@ -535,7 +535,7 @@ function CuratorMessageThread({ onClose }: { onClose: () => void }) {
 export function HomeScreen({
   savedIds,
   onToggleSave,
-  onPropose,
+  onInvite,
   members,
   clusterName,
   viewerId,
@@ -612,14 +612,14 @@ export function HomeScreen({
       >
         <button
           type="button"
-          onClick={() => onPropose(conclave.curatorDrop.name)}
+          onClick={onInvite}
           className="pointer-events-auto w-full rounded-full py-4 text-[14px] font-medium tracking-[0.03em] transition active:scale-[0.98]"
           style={{
             background: 'var(--ink)',
             color: 'var(--surface-raised)',
           }}
         >
-          Propose a meetup
+          Invite new members
         </button>
       </div>
 
