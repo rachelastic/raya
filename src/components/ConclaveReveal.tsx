@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import type { TasteMember } from '../data/members'
-import type { PlacementResult } from '../data/conclaveMatching'
+import {
+  maxGroupSize,
+  type PlacementResult,
+} from '../data/conclaveMatching'
 
 type ConclaveRevealProps = {
   onEnter?: () => void
@@ -90,9 +93,13 @@ export function ConclaveReveal({ onEnter, placement }: ConclaveRevealProps) {
   const [phase, setPhase] = useState(0)
   const placed = placement.placed
   const clusterName = placement.clusterName ?? 'Open Tastes'
-  const matched: TasteMember[] = placed ? placement.conclave : []
-  const { totalMembers, clusterSize, conclaveSize, curatorTableSize } =
-    placement
+  // Belt-and-suspenders: Circle avatars never exceed fine-match max
+  const matched: TasteMember[] = placed
+    ? placement.conclave.slice(0, maxGroupSize)
+    : []
+  const { totalMembers, clusterSize, curatorTableSize } = placement
+  const circleSize =
+    placement.circleSize ?? placement.conclaveSize ?? matched.length
 
   const curatorTableSubtitle =
     curatorTableSize > 0
@@ -104,9 +111,9 @@ export function ConclaveReveal({ onEnter, placement }: ConclaveRevealProps) {
       computeRingDiameters(
         totalMembers,
         Math.max(clusterSize, 1),
-        Math.max(conclaveSize, placed ? matched.length : 1),
+        Math.max(circleSize, placed ? matched.length : 1),
       ),
-    [totalMembers, clusterSize, conclaveSize, placed, matched.length],
+    [totalMembers, clusterSize, circleSize, placed, matched.length],
   )
 
   const stage = rings.outer
@@ -252,7 +259,7 @@ export function ConclaveReveal({ onEnter, placement }: ConclaveRevealProps) {
               visible={phase >= 3}
               style={{ textAlign: 'center', width: '100%' }}
               title="Your Circle"
-              subtitle={`${formatCount(conclaveSize)} in your Circle`}
+              subtitle={`${formatCount(matched.length)} in your Circle`}
               titleColor="#9a8158"
               emphasis
             />
@@ -282,7 +289,7 @@ export function ConclaveReveal({ onEnter, placement }: ConclaveRevealProps) {
                 transition: 'opacity 450ms ease-out',
               }}
             >
-              {rarityLine(conclaveSize, totalMembers)}
+              {rarityLine(matched.length, totalMembers)}
             </p>
             <button
               type="button"

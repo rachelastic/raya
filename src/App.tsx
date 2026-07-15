@@ -6,7 +6,7 @@ import { ProposeMeetupScreen } from './components/screens/ProposeMeetupScreen'
 import { MeetupConfirmedScreen } from './components/screens/MeetupConfirmedScreen'
 import { defaultMeetup, type MeetupDraft } from './data/mock'
 import { CURRENT_USER_ID, MOCK_MEMBERS } from './data/members'
-import { placeInConclave } from './data/conclaveMatching'
+import { maxGroupSize, placeInConclave } from './data/conclaveMatching'
 
 type Screen = 'intro' | 'home' | 'propose' | 'confirmed'
 
@@ -23,7 +23,7 @@ export default function App() {
   )
 
   const matchedMembers = placement.placed
-    ? placement.conclave
+    ? placement.conclave.slice(0, maxGroupSize)
     : [placement.viewer]
 
   const clusterName =

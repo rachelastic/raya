@@ -163,8 +163,9 @@ export function ensureUniqueInitials(
   })
 }
 
-function buildMembers(): TasteMember[] {
-  const rand = mulberry32(42)
+/** Deterministic member pool — pass a seed to regenerate for tests */
+export function buildMembers(seed = 42): TasteMember[] {
+  const rand = mulberry32(seed)
   const drafts: TasteMember[] = []
 
   for (let i = 0; i < 52; i++) {

@@ -6,16 +6,25 @@ import {
 } from './members'
 
 const MEANINGFUL_THRESHOLD = 0.35
-const MIN_CONCLAVE = 6
-const MAX_CONCLAVE = 10
+/** Prefer same-city while ranking; relaxed before similarity if under min */
 const SAME_CITY_BOOST = 0.12
+/** Reasonable cosine floor for fine matching */
+const SIMILARITY_FLOOR = 0.22
+/** After city is relaxed, still prefer some signal before pure top-N */
+const SIMILARITY_RELAXED = 0.05
+
+/** Public controls for Circle size (fine-matching output) */
+export const minGroupSize = 6
+export const maxGroupSize = 10
 
 export type NicheStats = {
   /** Full generated member pool */
   totalMembers: number
-  /** Members in the viewer’s coarse taste cluster */
+  /** Members in the viewer’s coarse taste cluster (or widened match pool) */
   clusterSize: number
-  /** Matched Conclave size (0 if unplaced) */
+  /** Fine-matched Circle size (0 if unplaced) — always ≤ maxGroupSize when placed */
+  circleSize: number
+  /** @deprecated use circleSize — kept for older call sites */
   conclaveSize: number
   /** Circle members who meet Curator-table standing gates */
   curatorTableSize: number
@@ -26,8 +35,9 @@ export type PlacementResult =
       placed: true
       clusterName: string
       clusterKey: string
+      /** Fine-matched Circle only (6–maxGroupSize) — never the full cluster */
       conclave: TasteMember[]
-      /** Subset of conclave eligible for the Curator’s table (may be empty) */
+      /** Subset of Circle eligible for the Curator’s table (may be empty) */
       curatorTable: TasteMember[]
       viewer: TasteMember
     } & NicheStats
@@ -116,8 +126,8 @@ export function clusterKeyFromTags(tags: TasteTag[]): string {
 }
 
 /**
- * Coarse clustering: group by each member's top 1–2 tags.
- * Returns map of clusterKey → members, plus display names.
+ * STAGE 1 — Coarse clustering: group by each member's top 1–2 tags.
+ * Clusters may be large (dozens). Never treat this as the Circle.
  */
 export function coarseCluster(members: TasteMember[]): {
   byKey: Map<string, TasteMember[]>
@@ -140,80 +150,199 @@ export function coarseCluster(members: TasteMember[]): {
   return { byKey, names }
 }
 
+type Ranked = {
+  member: TasteMember
+  sim: number
+  sameCity: boolean
+  score: number
+}
+
+function rankAgainstViewer(
+  viewer: TasteMember,
+  others: TasteMember[],
+): Ranked[] {
+  return others
+    .map((m) => {
+      const sim = cosineSimilarity(viewer, m)
+      const sameCity = m.city === viewer.city
+      return {
+        member: m,
+        sim,
+        sameCity,
+        score: sim + (sameCity ? SAME_CITY_BOOST : 0),
+      }
+    })
+    .sort((a, b) => b.score - a.score || b.sim - a.sim)
+}
+
 /**
- * Fine matching within the viewer's taste cluster:
- * rank by cosine similarity, prefer same-city, assemble 6–10 members.
+ * STAGE 2 — Fine matching within a coarse cluster (or widened candidate pool).
+ * Selects 6–maxGroupSize members via cosine similarity to the viewer.
+ * Never returns the full cluster as a fallback.
  */
 export function matchConclave(
   viewer: TasteMember,
   clusterMembers: TasteMember[],
+  options?: { minGroupSize?: number; maxGroupSize?: number },
 ): TasteMember[] {
+  const minSize = options?.minGroupSize ?? minGroupSize
+  const maxSize = options?.maxGroupSize ?? maxGroupSize
+  if (maxSize < 1) return []
+  if (minSize > maxSize) {
+    throw new Error(`minGroupSize (${minSize}) > maxGroupSize (${maxSize})`)
+  }
+
+  const othersMax = maxSize - 1 // room for viewer
+  const othersMin = Math.max(0, minSize - 1)
+
   const others = clusterMembers.filter((m) => m.id !== viewer.id)
+  const ranked = rankAgainstViewer(viewer, others)
 
-  const ranked = others
-    .map((m) => {
-      const sim = cosineSimilarity(viewer, m)
-      const cityBonus = m.city === viewer.city ? SAME_CITY_BOOST : 0
-      return { member: m, score: sim + cityBonus, sim }
-    })
-    .sort((a, b) => b.score - a.score)
+  const take = (candidates: Ranked[], n: number): TasteMember[] =>
+    candidates.slice(0, Math.min(n, othersMax)).map((r) => r.member)
 
-  const target = Math.min(
-    MAX_CONCLAVE - 1,
-    Math.max(MIN_CONCLAVE - 1, Math.min(ranked.length, 8)),
+  // Ideal others count when many candidates: prefer mid of [min, max]
+  const idealOthers = Math.min(
+    othersMax,
+    Math.max(othersMin, Math.min(ranked.length, 8)),
   )
 
-  const picks = ranked.slice(0, target).map((r) => r.member)
+  // 1) Same-city + similarity floor
+  let picks = take(
+    ranked.filter((r) => r.sameCity && r.sim >= SIMILARITY_FLOOR),
+    idealOthers,
+  )
 
-  // Viewer first, then by score — unique initials within this matched group
-  return ensureUniqueInitials([viewer, ...picks], { [viewer.id]: viewer.initials })
+  // 2) Relax same-city first; keep similarity floor
+  if (picks.length < othersMin) {
+    picks = take(
+      ranked.filter((r) => r.sim >= SIMILARITY_FLOOR),
+      idealOthers,
+    )
+  }
+
+  // 3) Relax similarity floor; still ranked top-N — never dump the cluster
+  if (picks.length < othersMin) {
+    picks = take(
+      ranked.filter((r) => r.sim >= SIMILARITY_RELAXED),
+      idealOthers,
+    )
+  }
+
+  // 4) Last resort: best available scores, still hard-capped at othersMax
+  if (picks.length < othersMin) {
+    picks = take(ranked, othersMax)
+  }
+
+  // Safety: never exceed othersMax even if a step miscounted
+  picks = picks.slice(0, othersMax)
+
+  const circle = ensureUniqueInitials([viewer, ...picks], {
+    [viewer.id]: viewer.initials,
+  })
+
+  // Hard cap including viewer
+  return circle.slice(0, maxSize)
+}
+
+/** Alias — Circle is the product name for the fine-matched group */
+export const matchCircle = matchConclave
+
+function logPlacementSanity(info: {
+  clusterSize: number
+  circleSize: number
+  totalMembers: number
+  placed: boolean
+}) {
+  if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) {
+    console.info(
+      '[Circle placement] clusterSize=%d circleSize=%d totalMembers=%d placed=%s',
+      info.clusterSize,
+      info.circleSize,
+      info.totalMembers,
+      info.placed,
+    )
+    if (info.placed && (info.circleSize < minGroupSize || info.circleSize > maxGroupSize)) {
+      console.warn(
+        '[Circle placement] circleSize out of [%d, %d] — got %d (cluster was %d)',
+        minGroupSize,
+        maxGroupSize,
+        info.circleSize,
+        info.clusterSize,
+      )
+    }
+  }
 }
 
 /**
- * Full placement pipeline — run once before the reveal animation.
+ * Full placement pipeline — coarse cluster, then fine match. Never collapse.
  */
 export function placeInConclave(
   members: TasteMember[],
   viewerId: string,
+  options?: { minGroupSize?: number; maxGroupSize?: number },
 ): PlacementResult {
+  const minSize = options?.minGroupSize ?? minGroupSize
+  const maxSize = options?.maxGroupSize ?? maxGroupSize
+
   const viewer = members.find((m) => m.id === viewerId)
   if (!viewer) {
     throw new Error(`Viewer ${viewerId} not found in member set`)
   }
 
+  // ——— STAGE 1: coarse taste clustering ———
   const { byKey, names } = coarseCluster(members)
   const viewerTags = topTags(viewer, 2)
   const key = viewerTags.length ? clusterKeyFromTags(viewerTags) : null
   const clusterName = key ? (names.get(key) ?? clusterNameFromTags(viewerTags)) : null
-  const coarseClusterSize = key ? (byKey.get(key)?.length ?? 1) : 0
+  const coarse = key ? (byKey.get(key) ?? [viewer]) : [viewer]
   const totalMembers = members.length
 
   if (meaningfulTags(viewer).length < 2) {
-    return {
+    const result: PlacementResult = {
       placed: false,
       clusterName,
       viewer,
       curatorTable: [],
       reason: 'insufficient_taste',
       totalMembers,
-      clusterSize: coarseClusterSize,
+      clusterSize: coarse.length,
+      circleSize: 0,
       conclaveSize: 0,
       curatorTableSize: 0,
     }
+    logPlacementSanity({
+      clusterSize: result.clusterSize,
+      circleSize: 0,
+      totalMembers,
+      placed: false,
+    })
+    return result
   }
 
-  const cluster = key ? (byKey.get(key) ?? [viewer]) : [viewer]
-  // If this exact top-2 key is a tiny clique, widen to members who share the top tag
-  let pool = cluster
-  if (pool.length < MIN_CONCLAVE && viewerTags[0]) {
+  // Candidate pool for fine matching. If the exact top-2 clique is tiny,
+  // widen to primary-tag peers — still only an INPUT to stage 2.
+  let matchPool = coarse
+  if (matchPool.length < minSize && viewerTags[0]) {
     const primary = viewerTags[0]
-    pool = members.filter((m) => topTags(m, 2).includes(primary))
+    matchPool = members.filter((m) => topTags(m, 2).includes(primary))
   }
 
-  const conclave = matchConclave(viewer, pool)
-  const curatorTable = filterCuratorTable(conclave)
+  // ——— STAGE 2: fine cosine match → Circle (hard-capped) ———
+  const conclave = matchConclave(viewer, matchPool, {
+    minGroupSize: minSize,
+    maxGroupSize: maxSize,
+  })
 
-  return {
+  if (conclave.length > maxSize) {
+    // Should be unreachable — enforce anyway
+    conclave.length = maxSize
+  }
+
+  const curatorTable = filterCuratorTable(conclave)
+  const circleSize = conclave.length
+
+  const result: PlacementResult = {
     placed: true,
     clusterName: clusterName ?? clusterNameFromTags(viewerTags),
     clusterKey: key ?? 'open',
@@ -221,9 +350,19 @@ export function placeInConclave(
     curatorTable,
     viewer,
     totalMembers,
-    // Effective taste neighborhood (coarse clique, or widened primary-tag pool)
-    clusterSize: pool.length,
-    conclaveSize: conclave.length,
+    // Taste neighborhood size (coarse clique, or widened primary-tag pool)
+    clusterSize: matchPool.length,
+    circleSize,
+    conclaveSize: circleSize,
     curatorTableSize: curatorTable.length,
   }
+
+  logPlacementSanity({
+    clusterSize: result.clusterSize,
+    circleSize,
+    totalMembers,
+    placed: true,
+  })
+
+  return result
 }
