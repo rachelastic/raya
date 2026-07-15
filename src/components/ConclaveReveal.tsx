@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { TasteMember } from '../data/members'
 import {
   maxGroupSize,
@@ -76,16 +76,9 @@ function formatCount(n: number): string {
   return n.toLocaleString('en-US')
 }
 
-function rarityLine(conclaveSize: number, totalMembers: number): string {
-  const ratio = totalMembers > 0 ? conclaveSize / totalMembers : 1
-  if (ratio < 0.001) return 'One of the rarest circles in Places'
-  if (ratio < 0.005) return 'An exceptionally niche circle'
-  if (ratio < 0.02) return 'A distinctly niche circle'
-  return 'A well-matched circle'
-}
-
 /**
  * Animated concentric-circle reveal for Circle placement.
+ * Progression narrative explains the hierarchy; rings reinforce it.
  * Ring 3 = Your Circle (algorithmic taste match).
  * Ring 4 = A Curator's table (human-gated standing) — always locked for the viewer.
  */
@@ -101,10 +94,10 @@ export function ConclaveReveal({ onEnter, placement }: ConclaveRevealProps) {
   const circleSize =
     placement.circleSize ?? placement.conclaveSize ?? matched.length
 
-  const curatorTableSubtitle =
+  const tableLine =
     curatorTableSize > 0
-      ? `${formatCount(curatorTableSize)} in your Circle are already at this table`
-      : 'earned, not matched'
+      ? `${formatCount(curatorTableSize)} Curator's Table · locked`
+      : 'A Curator\'s Table · locked'
 
   const rings = useMemo(
     () =>
@@ -121,22 +114,59 @@ export function ConclaveReveal({ onEnter, placement }: ConclaveRevealProps) {
   const avatarOrbit = (rings.inner / 2 + rings.locked / 2) / 2 + 6
   const layout = avatarLayout(matched.length, avatarOrbit)
 
+  const steps = placed
+    ? [
+        {
+          phase: 1,
+          text: `${formatCount(totalMembers)} members interested in ${tasteWord(clusterName)}`,
+          color: '#6f695f',
+        },
+        {
+          phase: 2,
+          text: `${formatCount(clusterSize)} people who share your taste`,
+          color: '#6f695f',
+        },
+        {
+          phase: 3,
+          text: `${formatCount(matched.length)} carefully matched into your Circle`,
+          color: '#9a8158',
+          emphasis: true,
+        },
+        {
+          phase: 6,
+          text: tableLine,
+          color: '#b5aea3',
+          muted: true,
+        },
+      ]
+    : [
+        {
+          phase: 1,
+          text: `${formatCount(totalMembers)} members on Places`,
+          color: '#6f695f',
+        },
+        {
+          phase: 2,
+          text: 'still learning your taste',
+          color: '#6f695f',
+        },
+      ]
+
   useEffect(() => {
-    // Outer → cluster → Circle → avatars → rarity → Curator's table → CTA
+    // Outer → cluster → Circle → avatars → Curator's table → CTA
     const timers = placed
       ? [
           window.setTimeout(() => setPhase(1), 40),
-          window.setTimeout(() => setPhase(2), 500),
-          window.setTimeout(() => setPhase(3), 980),
-          window.setTimeout(() => setPhase(4), 1460),
-          window.setTimeout(() => setPhase(5), 1780),
-          window.setTimeout(() => setPhase(6), 2200),
-          window.setTimeout(() => setPhase(7), 2900),
+          window.setTimeout(() => setPhase(2), 700),
+          window.setTimeout(() => setPhase(3), 1400),
+          window.setTimeout(() => setPhase(4), 2000),
+          window.setTimeout(() => setPhase(6), 2600),
+          window.setTimeout(() => setPhase(7), 3400),
         ]
       : [
           window.setTimeout(() => setPhase(1), 40),
-          window.setTimeout(() => setPhase(2), 500),
-          window.setTimeout(() => setPhase(7), 1100),
+          window.setTimeout(() => setPhase(2), 700),
+          window.setTimeout(() => setPhase(7), 1400),
         ]
 
     return () => timers.forEach(clearTimeout)
@@ -150,18 +180,18 @@ export function ConclaveReveal({ onEnter, placement }: ConclaveRevealProps) {
         fontFamily: "'Cormorant Garamond', Georgia, serif",
       }}
     >
-      <div className="relative flex flex-1 flex-col items-center justify-center px-5 pt-10">
-        <Caption
-          visible={phase >= 1}
+      <div className="relative flex flex-1 flex-col items-center justify-center px-5 pt-8">
+        <p
+          className="mb-3 text-[11px] font-medium tracking-[0.2em] uppercase"
           style={{
-            textAlign: 'center',
-            marginBottom: 14,
-            width: '100%',
+            fontFamily: 'Outfit, system-ui, sans-serif',
+            color: '#9a948a',
+            opacity: phase >= 1 ? 1 : 0,
+            transition: 'opacity 400ms ease-out',
           }}
-          title="Places"
-          subtitle={`${formatCount(totalMembers)} members`}
-          titleColor="#6f695f"
-        />
+        >
+          {clusterName}
+        </p>
 
         <div className="relative shrink-0" style={{ width: stage, height: stage }}>
           <Ring
@@ -188,7 +218,6 @@ export function ConclaveReveal({ onEnter, placement }: ConclaveRevealProps) {
                 strokeWidth={2}
               />
 
-              {/* Avatars settle in ring 3 — Circle is taste-matched */}
               <div
                 className="pointer-events-none absolute left-1/2 top-1/2"
                 style={{
@@ -222,7 +251,6 @@ export function ConclaveReveal({ onEnter, placement }: ConclaveRevealProps) {
                 })}
               </div>
 
-              {/* Ring 4 — Curator's table: locked for viewer; proximity copy only */}
               <Ring
                 stage={stage}
                 size={rings.locked}
@@ -246,67 +274,87 @@ export function ConclaveReveal({ onEnter, placement }: ConclaveRevealProps) {
           )}
         </div>
 
-        <div className="mt-5 flex w-full flex-col items-center gap-3 px-2">
-          <Caption
-            visible={phase >= 2}
-            style={{ textAlign: 'center', width: '100%' }}
-            title={clusterName}
-            subtitle={`${formatCount(clusterSize)} share your taste`}
-            titleColor="#6f695f"
-          />
-          {placed && (
-            <Caption
-              visible={phase >= 3}
-              style={{ textAlign: 'center', width: '100%' }}
-              title="Your Circle"
-              subtitle={`${formatCount(matched.length)} in your Circle`}
-              titleColor="#9a8158"
-              emphasis
-            />
-          )}
-          {placed && (
-            <Caption
-              visible={phase >= 6}
-              style={{ textAlign: 'center', width: '100%' }}
-              title="A Curator's table"
-              subtitle={curatorTableSubtitle}
-              titleColor="#b5aea3"
-              titleSize={12}
-              fadeMs={900}
-            />
+        {/* Progression narrative — explains narrowing, not just labels */}
+        <div
+          className="mt-6 flex w-full flex-col items-center px-2"
+          style={{ fontFamily: 'Outfit, system-ui, sans-serif' }}
+        >
+          {steps.map((step, i) => {
+            const visible = phase >= step.phase
+            const showArrow = i < steps.length - 1 && phase >= steps[i + 1].phase
+            return (
+              <div key={step.phase} className="flex w-full flex-col items-center">
+                <p
+                  style={{
+                    margin: 0,
+                    textAlign: 'center',
+                    color: step.color,
+                    fontSize: step.emphasis ? 14 : step.muted ? 12 : 13,
+                    fontWeight: step.emphasis ? 500 : 400,
+                    fontStyle: step.emphasis ? 'italic' : 'normal',
+                    letterSpacing: '0.01em',
+                    lineHeight: 1.35,
+                    maxWidth: '28ch',
+                    opacity: visible ? 1 : 0,
+                    transform: visible ? 'translateY(0)' : 'translateY(6px)',
+                    transition:
+                      'opacity 500ms ease-out, transform 500ms cubic-bezier(0.22, 1, 0.36, 1)',
+                  }}
+                >
+                  {step.text}
+                </p>
+                <span
+                  aria-hidden
+                  style={{
+                    display: 'block',
+                    margin: '6px 0',
+                    color: '#c4beb4',
+                    fontSize: 14,
+                    lineHeight: 1,
+                    opacity: showArrow ? 1 : 0,
+                    transition: 'opacity 350ms ease-out',
+                  }}
+                >
+                  ↓
+                </span>
+              </div>
+            )
+          })}
+          {placed && phase >= 6 && (
+            <p
+              style={{
+                margin: '2px 0 0',
+                color: '#9a948a',
+                fontSize: 11,
+                opacity: 1,
+                fontFamily: 'Outfit, system-ui, sans-serif',
+              }}
+            >
+              {curatorTableSize > 0
+                ? `${formatCount(curatorTableSize)} in your Circle already at this table · earned, not matched`
+                : 'earned, not matched'}
+            </p>
           )}
         </div>
       </div>
 
       <div className="px-8 pb-12">
         {placed ? (
-          <>
-            <p
-              className="mb-5 text-center text-[13px] italic leading-snug"
-              style={{
-                color: '#8a8378',
-                opacity: phase >= 5 ? 1 : 0,
-                transition: 'opacity 450ms ease-out',
-              }}
-            >
-              {rarityLine(matched.length, totalMembers)}
-            </p>
-            <button
-              type="button"
-              onClick={onEnter}
-              disabled={phase < 7}
-              className="w-full rounded-full py-[15px] text-[13px] font-medium tracking-[0.04em] disabled:pointer-events-none"
-              style={{
-                fontFamily: 'Outfit, system-ui, sans-serif',
-                background: '#1a1714',
-                color: '#faf9f6',
-                opacity: phase >= 7 ? 1 : 0,
-                transition: 'opacity 450ms ease-out',
-              }}
-            >
-              Enter your Circle
-            </button>
-          </>
+          <button
+            type="button"
+            onClick={onEnter}
+            disabled={phase < 7}
+            className="w-full rounded-full py-[15px] text-[13px] font-medium tracking-[0.04em] disabled:pointer-events-none"
+            style={{
+              fontFamily: 'Outfit, system-ui, sans-serif',
+              background: '#1a1714',
+              color: '#faf9f6',
+              opacity: phase >= 7 ? 1 : 0,
+              transition: 'opacity 450ms ease-out',
+            }}
+          >
+            Enter your Circle
+          </button>
         ) : (
           <p
             className="text-center text-[14px] italic"
@@ -322,6 +370,15 @@ export function ConclaveReveal({ onEnter, placement }: ConclaveRevealProps) {
       </div>
     </div>
   )
+}
+
+/** Soften cluster display names into interest language for the outer step */
+function tasteWord(clusterName: string): string {
+  const n = clusterName.toLowerCase()
+  if (n.includes('wine')) return 'wine'
+  if (n.includes('coffee')) return 'coffee'
+  if (n.includes('wellness')) return 'wellness'
+  return 'places like these'
 }
 
 type RingProps = {
@@ -389,70 +446,6 @@ function LockIcon() {
       />
       <circle cx="8" cy="10.5" r="0.9" fill="currentColor" />
     </svg>
-  )
-}
-
-type CaptionProps = {
-  visible: boolean
-  title: string
-  subtitle?: string
-  titleColor: string
-  titleSize?: number
-  emphasis?: boolean
-  fadeMs?: number
-  style?: CSSProperties
-}
-
-function Caption({
-  visible,
-  title,
-  subtitle,
-  titleColor,
-  titleSize,
-  emphasis = false,
-  fadeMs = 380,
-  style,
-}: CaptionProps) {
-  return (
-    <div
-      style={{
-        opacity: visible ? 1 : 0,
-        transition: `opacity ${fadeMs}ms ease-out ${fadeMs === 380 ? 90 : 0}ms`,
-        pointerEvents: 'none',
-        ...style,
-      }}
-    >
-      <p
-        style={{
-          margin: 0,
-          color: titleColor,
-          fontSize: titleSize ?? (emphasis ? 14 : 13),
-          fontWeight: emphasis ? 500 : 400,
-          letterSpacing: emphasis ? '0.05em' : '0.02em',
-          fontStyle: emphasis ? 'italic' : 'normal',
-          lineHeight: 1.25,
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {title}
-      </p>
-      {subtitle && (
-        <p
-          style={{
-            margin: '3px 0 0',
-            color: '#9a948a',
-            fontSize: 11,
-            fontWeight: 400,
-            fontStyle: 'normal',
-            letterSpacing: '0.01em',
-            lineHeight: 1.25,
-            fontFamily: 'Outfit, system-ui, sans-serif',
-          }}
-        >
-          {subtitle}
-        </p>
-      )}
-    </div>
   )
 }
 

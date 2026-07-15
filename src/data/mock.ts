@@ -107,7 +107,7 @@ export const conclave: Conclave = {
       neighborhood: 'Williamsburg',
       image:
         'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80',
-      note: 'The sole meunière at the bar — no reservation needed after 9.',
+      note: 'Saving this for a quiet weeknight — sole meunière at the bar, no reservation after 9.',
       savedBy: 'Mara',
       savedById: 'mara',
     },
@@ -117,7 +117,7 @@ export const conclave: Conclave = {
       neighborhood: 'South Williamsburg',
       image:
         'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&q=80',
-      note: 'Came for wine, stayed for the cheese plate. Twice this month.',
+      note: 'Came for wine, stayed for the cheese. Putting a pin in it for Friday.',
       savedBy: 'Julian',
       savedById: 'julian',
     },
@@ -127,7 +127,7 @@ export const conclave: Conclave = {
       neighborhood: 'East Village',
       image:
         'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?w=800&q=80',
-      note: 'Quiet enough for a real conversation. The orange wine flights are generous.',
+      note: 'Need a place for a real conversation — orange wine flights, never crowded early.',
       savedBy: 'Elise',
       savedById: 'elise',
     },
@@ -137,7 +137,7 @@ export const conclave: Conclave = {
       neighborhood: 'Lower East Side',
       image:
         'https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=800&q=80',
-      note: 'Best seat is the corner by the kitchen. Order whatever’s being opened.',
+      note: 'Corner by the kitchen. Note to self: order whatever they’re opening.',
       savedBy: 'Sana',
       savedById: 'sana',
     },
@@ -147,7 +147,7 @@ export const conclave: Conclave = {
       neighborhood: 'Tribeca',
       image:
         'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80',
-      note: 'Weeknight prix fixe if you can get in. Worth the walk afterward.',
+      note: 'Weeknight prix fixe if we can get in — walk Greenwich after.',
       savedBy: 'Tom',
       savedById: 'tom',
     },

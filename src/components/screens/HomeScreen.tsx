@@ -193,16 +193,17 @@ function CuratorDropCard({
   )
 }
 
-function FeedCard({
+/** A member’s personal note left while saving a place — carousel card */
+function NotedEntry({
   place,
+  member,
   saved,
   onToggleSave,
-  member,
 }: {
   place: PlaceItem
+  member?: TasteMember
   saved: boolean
   onToggleSave: () => void
-  member?: TasteMember
 }) {
   return (
     <article
@@ -229,7 +230,7 @@ function FeedCard({
             <span className="font-medium" style={{ color: 'var(--ink-soft)' }}>
               {place.savedBy}
             </span>{' '}
-            saved
+            noted
           </p>
         </div>
         <h3
@@ -238,17 +239,17 @@ function FeedCard({
         >
           {place.name}
         </h3>
-        <p
-          className="mt-0.5 text-[11px]"
-          style={{ color: 'var(--ink-muted)' }}
-        >
+        <p className="mt-0.5 text-[11px]" style={{ color: 'var(--ink-muted)' }}>
           {place.neighborhood}
         </p>
         <p
-          className="mt-2 line-clamp-2 flex-1 text-[12px] font-light leading-snug"
-          style={{ color: 'var(--ink-soft)' }}
+          className="mt-2 line-clamp-3 flex-1 text-[12.5px] font-light italic leading-snug"
+          style={{
+            color: 'var(--ink-soft)',
+            fontFamily: 'var(--font-display)',
+          }}
         >
-          {place.note}
+          “{place.note}”
         </p>
         <div className="mt-3">
           <SaveButton saved={saved} onClick={onToggleSave} />
@@ -258,7 +259,7 @@ function FeedCard({
   )
 }
 
-function SharedCarousel({
+function NotedCarousel({
   places,
   byId,
   savedIds,
@@ -277,7 +278,7 @@ function SharedCarousel({
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
       {places.map((place) => (
-        <FeedCard
+        <NotedEntry
           key={place.id}
           place={place}
           member={place.savedById ? byId.get(place.savedById) : undefined}
@@ -586,13 +587,13 @@ export function HomeScreen({
 
         <section className="mt-10">
           <h2
-            className="mb-4 text-[11px] font-medium tracking-[0.18em] uppercase"
+            className="mb-4 px-0 text-[11px] font-medium tracking-[0.18em] uppercase"
             style={{ color: 'var(--ink-muted)' }}
           >
-            Recently
+            Noted
           </h2>
           <div className="-mx-5">
-            <SharedCarousel
+            <NotedCarousel
               places={feed}
               byId={byId}
               savedIds={savedIds}
